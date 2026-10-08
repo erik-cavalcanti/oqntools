@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Version.props" />
+  <PropertyGroup>
+    <RevitVersion Condition="'$(RevitVersion)' == ''">2026</RevitVersion>
+    <TargetFramework Condition="('$(RevitVersion)' == '2022' Or '$(RevitVersion)' == '2023' Or '$(RevitVersion)' == '2024')">net48</TargetFramework>
+    <TargetFramework Condition="'$(RevitVersion)' == '2025' Or '$(RevitVersion)' == '2026'">net8.0-windows</TargetFramework>
+    <TargetFramework Condition="'$(RevitVersion)' == '2027'">net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <OutputType>Library</OutputType><PlatformTarget>x64</PlatformTarget>
+    <LangVersion>latest</LangVersion><Nullable>disable</Nullable><ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>OQNTools</AssemblyName><RootNamespace>OQNTools</RootNamespace>
+    <DefineConstants>$(DefineConstants);REVIT$(RevitVersion)</DefineConstants>
+    <RevitDir Condition="'$(RevitDir)' == ''">C:\Program Files\Autodesk\Revit $(RevitVersion)</RevitDir>
+    <OutputPath>..\..\artifacts\$(RevitVersion)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="RevitAPI"><HintPath>$(RevitDir)\RevitAPI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="RevitAPIUI"><HintPath>$(RevitDir)\RevitAPIUI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.IO.Compression" Condition="('$(RevitVersion)' == '2022' Or '$(RevitVersion)' == '2023' Or '$(RevitVersion)' == '2024')" />
+    <Reference Include="System.IO.Compression.FileSystem" Condition="('$(RevitVersion)' == '2022' Or '$(RevitVersion)' == '2023' Or '$(RevitVersion)' == '2024')" />
+    <Reference Include="System.Xml.Linq" Condition="('$(RevitVersion)' == '2022' Or '$(RevitVersion)' == '2023' Or '$(RevitVersion)' == '2024')" />
+    <Content Include="..\..\assets\*.png" Link="assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\Manual.html" Link="Manual.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup><ProjectReference Include="..\OQNTools.Glb\OQNTools.Glb.csproj" /></ItemGroup>
+  <Target Name="CheckRevitReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(RevitDir)\RevitAPI.dll')" Text="RevitAPI.dll não encontrada em $(RevitDir). Informe /p:RevitDir=CAMINHO para a versão correta." />
+    <Error Condition="'$(TargetFramework)' == ''" Text="Versão Revit não suportada: $(RevitVersion)." />
+  </Target>
+</Project>
