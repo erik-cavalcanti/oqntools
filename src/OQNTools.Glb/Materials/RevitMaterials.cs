@@ -1,0 +1,92 @@
+using System.Collections.Generic;
+using System.IO;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Visual;
+using OQNTools.Everse.Core;
+using OQNTools.Everse.Windows.MainWindow;
+using OQNTools.Everse.UI;
+using OQNTools.Everse.Materials;
+using OQNTools.Everse.Model;
+using System.IO.Ports;
+using System.Windows.Controls;
+using System.Windows.Media.Media3D;
+using Material = Autodesk.Revit.DB.Material;
+using OQNTools.Everse.Utils;
+using glTF.Manipulator.Schema;
+using glTF.Manipulator.GenericSchema;
+using glTF.Manipulator.Utils;
+
+
+namespace OQNTools.Everse.Export
+{
+    public static class RevitMaterials
+    {
+        const int ONEINTVALUE = 1;
+
+        public static BaseMaterial ProcessMaterial(MaterialNode node,
+                Preferences preferences, Document doc, IndexedDictionary<BaseMaterial> materials,
+                List<Texture> textures, List<glTFImage> images)
+        {
+            BaseMaterial material = new BaseMaterial();
+            string materialId = node.MaterialId.ToString();
+            material.uuid = materialId;
+
+            if (materials.Contains(materialId))
+            {
+                material = materials.GetElement(materialId);
+            }
+            else
+            {
+                Autodesk.Revit.DB.Material revitMaterial = doc.GetElement(node.MaterialId) as Autodesk.Revit.DB.Material;
+
+                if (revitMaterial == null)
+                {
+                    material = GLTFExportUtils.GetGLTFMaterial(materials);
+                }
+                else
+                {
+                    material = RevitMaterials.Export(node, preferences, doc, revitMaterial, textures, images, material);
+                }
+            }
+            materials.AddOrUpdateCurrentMaterial(material.uuid, material, false);
+
+            return material;
+        }
+
+
+        /// <summary>
+        /// Export Revit materials.
+        /// </summary>
+        public static BaseMaterial Export(MaterialNode node,
+            Preferences preferences, Document doc, 
+            Material revitMaterial, List<Texture> textures,
+            List<glTFImage> images, BaseMaterial material)
+        {
+
+                float opacity = ONEINTVALUE - (float)node.Transparency;
+
+                material.name = revitMaterial.Name;
+                MaterialProperties.SetProperties(node, opacity, ref material);
+
+                (Autodesk.Revit.DB.Color, Autodesk.Revit.DB.Color) baseNTintColour = (null, null);
+
+                if (revitMaterial != null && preferences.materials == MaterialsEnum.textures)
+                {
+                    baseNTintColour = MaterialTextures.SetMaterialTextures(revitMaterial, material, doc, opacity, textures, images);
+                    material.baseColorFactor = MaterialProperties.GetDefaultColour(opacity);
+                }
+
+                if (material.hasTexture)
+                {
+                    material.baseColorFactor = MaterialProperties.GetDefaultColour(opacity);
+                }
+                else
+                {
+                    material.baseColorFactor = MaterialProperties.SetMaterialColour(node, opacity, baseNTintColour.Item1, baseNTintColour.Item2);
+                }
+
+            return material;
+        }
+    }
+}
+

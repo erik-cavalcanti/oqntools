@@ -1,0 +1,113 @@
+<Window x:Class="OQNTools.Everse.UI.ProgressBarWindow" 
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OQNTools.Everse.UI"
+             mc:Ignorable="d" 
+             WindowStartupLocation="CenterScreen"
+             Title="Exporting process in progress..." 
+             Height="300"
+             Width="308"
+             ResizeMode="NoResize"
+             Topmost="True"
+             ShowInTaskbar="True"
+             Style="{DynamicResource CustomWindowStyle}">
+
+
+    <Border Background="{DynamicResource SecondaryBackgroundColor}"
+            BorderBrush="Transparent" 
+            BorderThickness="1,1,1,1" 
+            CornerRadius="8,8,8,8"
+            MouseDown="Border_MouseDown" Margin="5,5,5,6">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" Color="Gray" Opacity="0.3" ShadowDepth="0" Direction="0"></DropShadowEffect>
+        </Border.Effect>
+
+        <Grid Margin="20"
+              Background="Transparent">
+
+            <Button Style="{DynamicResource MainTitleButtonStyle}"
+                    Background="Transparent" 
+                    BorderBrush="Transparent" 
+                    Click="Leia_Link" 
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="0,0,0,0" Height="44" Width="149"  >
+            </Button>
+
+            <Line Stroke="{DynamicResource MainGray}"
+                  X2="1000"
+                  Opacity="0.5"
+                  StrokeThickness="4"
+                  VerticalAlignment="Top"
+                  Margin="-9,55,-9,0" RenderTransformOrigin="0.5,0.5" Height="2">
+                <Line.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleY="1"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Line.RenderTransform>
+            </Line>
+
+            <TextBlock DataContext="{Binding ViewModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                       TextWrapping="Wrap" 
+                       Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" 
+                       TextAlignment="Center"
+                       Foreground="{DynamicResource MainGray}" 
+                       HorizontalAlignment="Center" 
+                       Width="266" 
+                       Margin="0,86,0,0" 
+                       Height="26" 
+                       VerticalAlignment="Top"/>
+            <Button  
+                   Style="{DynamicResource TabCloseButtonStyle}"
+                   Name="CloseButton"  
+                   Click="CancelProcess_Click" 
+                   VerticalAlignment="Top"
+                   HorizontalAlignment="Right"/>
+
+            <ProgressBar Style="{DynamicResource ProgressBarStyle}" 
+                    Name="ProgressBar"
+                    Minimum="0"
+                    DataContext="{Binding ViewModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"                        
+                    Maximum="{Binding Path=ProgressBarMax}"
+                    Value="{Binding Path=ProgressBarGraphicValue}"
+                    Margin="0,144,0,0" 
+                    Height="11"
+                         Width="200"
+                         HorizontalAlignment="Center"
+                    VerticalAlignment="Top"/>
+
+            <TextBlock DataContext="{Binding ViewModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                       TextWrapping="Wrap" 
+                       Text="{Binding Path=ProgressBarPercentage, StringFormat={}{0:0}%}" 
+                       TextAlignment="Center"
+                       Foreground="{DynamicResource MainGray}"  
+                       HorizontalAlignment="Center" 
+                       Width="50" 
+                       Margin="0,120,0,0" 
+                       Height="18" 
+                       VerticalAlignment="Top"/>
+            
+            <Button Content="{Binding Action, UpdateSourceTrigger=PropertyChanged}" 
+                    DataContext="{Binding ViewModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    Style="{DynamicResource MainButtonStyle}"
+                    Click="CancelProcess_Click"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Width="150"/>
+        </Grid>
+    </Border>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+</Window>

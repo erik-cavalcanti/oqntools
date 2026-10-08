@@ -1,0 +1,81 @@
+namespace OQNTools.Everse.UI
+{
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Input;
+    using OQNTools.Everse.Utils;
+    using OQNTools.Everse.ViewModel;
+    using OQNTools.Everse.Core;
+
+    /// <summary>
+    /// Progress Bar Window.
+    /// </summary>
+    public partial class ProgressBarWindow : Window
+    {
+        public ProgressBarWindow()
+        {
+            this.InitializeComponent();
+            MainView = this;
+            this.DataContext = this;
+            Theme.ApplyDarkLightMode(this.Resources.MergedDictionaries[0]);
+        }
+
+        public static MainWindow mainWin;
+
+        public static ProgressBarWindow MainView { get; set; }
+
+        public static ProgressBarWindowViewModel ViewModel { get; set; } = new ProgressBarWindowViewModel();
+
+        public static ProgressBarWindow Create(double maxValue, double currentValue, 
+            string message, MainWindow mainWindow =  null)
+        {
+            mainWin = mainWindow;
+            var progressBar = new ProgressBarWindow();
+            double maxValueDuplicated = maxValue;
+            ProgressBarWindow.ViewModel.ProgressBarGraphicValue = maxValueDuplicated * 0.07;
+            ProgressBarWindow.ViewModel.ProgressBarValue = currentValue;
+            ProgressBarWindow.ViewModel.Message = message;
+            ProgressBarWindow.ViewModel.Action = "Cancel";
+            ProgressBarWindow.ViewModel.ProgressBarMax = maxValueDuplicated;
+            ProgressBarWindow.ViewModel.ProgressBarPercentage = 0;
+            progressBar.Show();
+            ProgressBarWindow.MainView.Topmost = true;
+            return progressBar;
+        }
+
+        private void CloseWindow(object sender, RoutedEventArgs e)
+        {
+            if (ProgressBarWindow.MainView != null && ProgressBarWindow.MainView.IsActive)
+            {
+                ProgressBarWindow.MainView.Close();
+            }
+        }
+
+        private void Border_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
+        }
+
+        private void CancelProcess_Click(object sender, RoutedEventArgs e)
+        {
+            GLTFExportContext.cancelation = true;
+            if (ViewModel.Action == "Accept")
+            {
+                if (mainWin != null)
+                {
+                    mainWin.Close();
+                }
+            }
+
+            this.Close();
+        }
+
+        private void Leia_Link(object sender, RoutedEventArgs e)
+        {
+            Hyperlink.Run("https://e-verse.com/leia/");
+        }
+    }
+}

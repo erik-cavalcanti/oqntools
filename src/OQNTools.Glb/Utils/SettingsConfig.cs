@@ -1,0 +1,166 @@
+using Autodesk.Revit.DB;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+using System.Xml;
+
+namespace OQNTools.Everse.Utils
+{
+    public static class SettingsConfig
+    {
+        public static readonly string currentVersion = "0.1.9";
+        public static readonly string currentApiKey = "PlaceHolderApiKey";
+
+        private static readonly string _configFile =
+            Path.Combine(Links.configDir, "leia.config");
+
+        private static readonly object _locker = new object();
+        public static int lastElement = 0;
+
+        static SettingsConfig()
+        {
+            // Ensure folder exists
+            if (!Directory.Exists(Links.configDir))
+                Directory.CreateDirectory(Links.configDir);
+
+            // Ensure file exists with defaults
+            if (!File.Exists(_configFile))
+                CreateDefaultConfig();
+        }
+
+        public static string GetValue(string key)
+        {
+            if (!File.Exists(_configFile))
+                CreateDefaultConfig();
+
+            lock (_locker)
+            {
+                try
+                {
+                    Configuration config = OpenConfig();
+                    KeyValueConfigurationElement setting = config.AppSettings.Settings[key];
+                    return setting != null ? setting.Value : null;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Error retrieving value for key '{key}'.", ex);
+                }
+            }
+        }
+
+        public static void SetValue(string key, string value)
+        {
+            if (!File.Exists(_configFile))
+                CreateDefaultConfig();
+
+            lock (_locker)
+            {
+                try
+                {
+                    Configuration config = OpenConfig();
+                    KeyValueConfigurationCollection settings = config.AppSettings.Settings;
+
+                    if (settings[key] == null)
+                        settings.Add(key, value);
+                    else
+                        settings[key].Value = value;
+
+                    config.Save(ConfigurationSaveMode.Modified);
+                    ConfigurationManager.RefreshSection("appSettings");
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Error setting value for key '{key}'.", ex);
+                }
+            }
+        }
+        private static Configuration OpenConfig()
+        {
+            var map = new ExeConfigurationFileMap { ExeConfigFilename = _configFile };
+            return ConfigurationManager.OpenMappedExeConfiguration(map, ConfigurationUserLevel.None);
+        }
+
+        /// <summary>
+        /// Creates leia.config with the requested default keys/values.
+        /// </summary>
+        private static void CreateDefaultConfig()
+        {
+            // Your requested defaults (removed the duplicated "runs" key to avoid errors).
+            var defaults = new Dictionary<string, string>
+            {
+                { "materials",   "materials"  },
+                { "format",      "glb"  },
+                { "normals",     "false" },
+                { "levels",      "false" },
+                { "lights",      "false" },
+                { "grids",       "false" },
+                { "batchId",     "false" },
+                { "properties",  "false" },
+                { "relocateTo0", "false" },
+                { "flipAxis",    "true"  },
+                { "units",       "null"  },
+                { "compression", "None"  },
+                { "path",        Environment.GetFolderPath(Environment.SpecialFolder.Desktop) },
+                { "fileName",    "3dExport" },
+                { "runs",        "0" },
+                { "user",        "user01" },
+                { "release",     "0" },
+                { "isRFA",       "false" }
+            };
+
+            var doc = new XmlDocument();
+            var decl = doc.CreateXmlDeclaration("1.0", "utf-8", null);
+            doc.AppendChild(decl);
+
+            XmlElement configuration = doc.CreateElement("configuration");
+            doc.AppendChild(configuration);
+
+            XmlElement appSettings = doc.CreateElement("appSettings");
+            configuration.AppendChild(appSettings);
+
+            foreach (var kvp in defaults)
+            {
+                XmlElement add = doc.CreateElement("add");
+                add.SetAttribute("key", kvp.Key);
+                add.SetAttribute("value", kvp.Value);
+                appSettings.AppendChild(add);
+            }
+
+            doc.Save(_configFile);
+        }
+
+        public static void UpdatedLastElement(ElementId elementId)
+        {
+            try
+            {
+                if (elementId == null)
+                {
+                    lastElement = -1;
+                    return;
+                }
+
+                if (elementId == ElementId.InvalidElementId)
+                {
+                    lastElement = -1;
+                    return;
+                }
+
+                 #if REVIT2024 || REVIT2025 || REVIT2026 || REVIT2027
+
+                long longValue = (long)elementId.Value;
+                lastElement = Convert.ToInt32(elementId.Value);
+
+                #else
+                lastElement = elementId.IntegerValue;
+                #endif
+            }
+            catch (OverflowException)
+            {
+                lastElement = -1;
+            }
+        }
+    }
+}
